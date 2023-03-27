@@ -1,9 +1,36 @@
 close all
 clear
 
+
+%%
+SLMm = 1152;
+SLMn = 960; % half width of 1920
+
+
+SLMm_mm = 10.7;
+SLMn_mm = 8.8; % half width 
+
+
+obj_mag = 25;
+obj_NA = 1.05;
+% 
+% obj_mag = 20;
+% obj_NA = .95;
+
+wavelength = 940e-9;
+
+k = 2*pi/wavelength;
+
+obj_RI = 1.33;
+f_tube = 180;  % in mm
+
+f_obj = f_tube/obj_mag;
+
+
+
 %% diffraction efficiency of blazed gratings vs number of levels
 
-N = 1:1000;% number of levels in blazed
+N = 1:100;% number of levels in blazed
 
 nu = (sin(pi./N)./(pi./N)).^2;
 
@@ -62,25 +89,55 @@ title('Blazed period va deflection distance')
 legend({[num2str(min_pix_num') repmat(' pix period', [4, 1])]})
 
 %%
-SLMmn = [10.7, 8.8];
 
-obj_mag = 25;
-obj_NA = 1.05;
-% 
-% obj_mag = 20;
-% obj_NA = .95;
+diameter_bfp1 = 2 * f_obj * obj_NA/obj_RI; % assuming objectives have been optimized to follow paraxial approx
 
-RI = 1.33;
-f_tube = 180;
-
-f_obj = f_tube/obj_mag;
-
-diameter_bfp1 = 2 * f_obj * obj_NA/RI; % assuming objectives have been optimized to follow paraxial approx
-
-diameter_bfp2 = 2 * f_obj * tan(asin(obj_NA/RI)); % more like reality
+diameter_bfp2 = 2 * f_obj * tan(asin(obj_NA/obj_RI)); % more like reality
 
 
-NA_eff = SLMmn * M_phase / diameter_bfp2; 
+NA_effm = SLMm_mm * M_phase / diameter_bfp2; 
+NA_effn = SLMn_mm * M_phase / diameter_bfp2; 
+%%
+
+% n*k*z*cos(theta)
+% n*k*z*sqrt(1-sin(theta)^2)
+% sin(theta) = rho*sin(alpha)
+
+eff_NA = .6;
+
+z_range = (-500:10:500)*1e-6;
+
+num_z = numel(z_range);
+
+rho = linspace(0, 1, SLMm/2);
+sin_alpha = eff_NA/obj_RI;
+
+phase = obj_RI * k * sqrt(1 - rho.^2 * sin_alpha^2);
+phase = phase - min(phase);
+
+eff_all = zeros(num_z,1);
+for n_z = 1:num_z
+    %pix_levels = floor((abs(z_range(n_z)) * phase)/(2*pi));
+    pix_levels = floor(floor((abs(z_range(n_z)) * phase)/(pi))/2);
+    
+
+    [C,level_changes, ic] = unique(pix_levels, 'last');
+    level_counts = -diff([level_changes; 0]);
+    
+    level_eff = (sin(pi./level_counts)./(pi./level_counts)).^2;
+    
+    level_rad = level_changes/(SLMm/2);
+    frac_areas = pi*level_rad.^2/pi;
+    level_frac_areas = -diff([frac_areas; 0]);
+    
+    eff_all(n_z) = sum(level_eff.*level_frac_areas);
+end
+
+figure; 
+plot(z_range, eff_all)
+
+figure; 
+plot(angle(exp(1i*(phase-pi))))
 
 
 
