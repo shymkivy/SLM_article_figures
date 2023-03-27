@@ -109,18 +109,15 @@ NA_effn = SLMn_mm * M_phase / diameter_bfp2;
 
 %% efficiency parameters
 max_dist = 500;
-NA_eff_plot = 0.1:0.1:1;
+NA_eff = 0.1:0.1:1.05;
 
 z_range = (0:10:max_dist)*1e-6;
 x_range = (0:10:max_dist)*1e-6;
 
-
-NA_eff_comp = 0.1:0.01:1.05;
 pat_pixels = [512, 960, 1024, 1152, 1920];
 
 eff_lim = .95;
-d_z = 2e-6;
-d_x = 2e-6;
+
 
 %% defocus efficiency
 
@@ -129,7 +126,7 @@ d_x = 2e-6;
 % sin(theta) = rho*sin(alpha)
 
 num_z = numel(z_range);
-num_NA = numel(NA_eff_plot);
+num_NA = numel(NA_eff);
 
 rho = linspace(0, 1, SLMm/2);
 colors1 = parula(num_NA);
@@ -137,7 +134,7 @@ colors1 = parula(num_NA);
 eff_all = zeros(num_z,num_NA);
 figure; hold on;
 for n_na = 1:num_NA
-    sin_alpha = NA_eff_plot(n_na)/obj_RI;
+    sin_alpha = NA_eff(n_na)/obj_RI;
     phase = obj_RI * k * sqrt(1 - rho.^2 * sin_alpha^2);
     phase = phase - min(phase);
 
@@ -159,7 +156,7 @@ for n_na = 1:num_NA
     end
     plot(z_range/1e-6, eff_all(:,n_na), 'color', colors1(n_na,:), 'Linewidth', 2)
 end
-legend(num2str(NA_eff_plot'), 'location', 'southwest')
+legend(num2str(NA_eff'), 'location', 'southwest')
 xlabel('Defocus distance (um)')
 ylabel('Diffraction efficiency')
 xlim('tight')
@@ -169,7 +166,7 @@ title(sprintf('Defocus efficiency vs NAeff, for %d pixel SLM', SLMm))
 %% max defocus dist
 
 num_pat = numel(pat_pixels);
-num_NA = numel(NA_eff_comp);
+num_NA = numel(NA_eff);
 
 colors1 = parula(num_pat+1);
 
@@ -179,7 +176,7 @@ for n_pat = 1:num_pat
     rho = linspace(0, 1, pat_pixels(n_pat)/2);
     
     for n_na = 1:num_NA
-        sin_alpha = NA_eff_comp(n_na)/obj_RI;
+        sin_alpha = NA_eff(n_na)/obj_RI;
         phase = obj_RI * k * sqrt(1 - rho.^2 * sin_alpha^2);
         phase = phase - min(phase);
 
@@ -205,12 +202,12 @@ for n_pat = 1:num_pat
         end
         dist_all(n_na, n_pat) = temp_z - d_z;
     end
-    plot(dist_all(:, n_pat)/1e-6, NA_eff_comp, 'Linewidth', 2, 'color', colors1(n_pat,:));
+    plot(dist_all(:, n_pat)/1e-6, NA_eff, 'Linewidth', 2, 'color', colors1(n_pat,:));
 end
 legend(num2str(pat_pixels'))
 xlabel(sprintf('Defocus distance (um)'))
 ylabel('NAeff')
-ylim([NA_eff_comp(1) NA_eff_comp(end)]);
+ylim([NA_eff(1) NA_eff(end)]);
 xlim([0 max_dist])
 title(sprintf('Distance at %d%% defocus efficiency vs NAeff', eff_lim*100))
 
@@ -221,7 +218,7 @@ title(sprintf('Distance at %d%% defocus efficiency vs NAeff', eff_lim*100))
 % n*k*x*sin(alpha)*rho
 
 num_x = numel(x_range);
-num_NA = numel(NA_eff_plot);
+num_NA = numel(NA_eff);
 
 rho = linspace(0, 1, SLMm/2);
 colors1 = parula(num_NA);
@@ -229,7 +226,7 @@ colors1 = parula(num_NA);
 eff_all_x = zeros(num_x ,num_NA);
 figure; hold on;
 for n_na = 1:num_NA
-    sin_alpha = NA_eff_plot(n_na)/obj_RI;
+    sin_alpha = NA_eff(n_na)/obj_RI;
     phase = obj_RI * k * sin_alpha * rho;
     phase = phase - min(phase);
 
@@ -247,7 +244,7 @@ for n_na = 1:num_NA
     end
     plot(x_range/1e-6, eff_all_x(:,n_na), 'color', colors1(n_na,:), 'Linewidth', 2)
 end
-legend(num2str(NA_eff_plot'), 'location', 'southwest')
+legend(num2str(NA_eff'), 'location', 'southwest')
 xlabel('Lateral diffraction distance (um)')
 ylabel('Diffraction efficiency')
 xlim('tight')
@@ -257,7 +254,7 @@ title(sprintf('Lateral diffraction efficiency vs NAeff, for %d pixel SLM', SLMm)
 %% max lateral efficiency 
 
 num_pat = numel(pat_pixels);
-num_NA = numel(NA_eff_comp);
+num_NA = numel(NA_eff);
 
 colors1 = parula(num_pat+1);
 
@@ -267,13 +264,13 @@ for n_pat = 1:num_pat
     rho = linspace(0, 1, pat_pixels(n_pat)/2);
     
     for n_na = 1:num_NA
-        sin_alpha = NA_eff_comp(n_na)/obj_RI;
+        sin_alpha = NA_eff(n_na)/obj_RI;
         phase = obj_RI * k * sin_alpha * rho;
         phase = phase - min(phase);
 
         temp_eff = 1;
         temp_x = 0;
-        
+        d_x = 2e-6;
         while temp_eff > eff_lim
             temp_x = temp_x + d_x;
             %pix_levels = floor((abs(z_range(n_z)) * phase)/(2*pi));
@@ -289,30 +286,16 @@ for n_pat = 1:num_pat
         end
         dist_all(n_na, n_pat) = temp_x - d_x;
     end
-    plot(dist_all(:, n_pat)/1e-6, NA_eff_comp, 'Linewidth', 2, 'color', colors1(n_pat,:));
+    plot(dist_all(:, n_pat)/1e-6, NA_eff, 'Linewidth', 2, 'color', colors1(n_pat,:));
 end
 legend(num2str(pat_pixels'))
 xlabel(sprintf('Diffraction distance (um)'))
 ylabel('NAeff')
-ylim([NA_eff_comp(1) NA_eff_comp(end)]);
+ylim([NA_eff(1) NA_eff(end)]);
 xlim([0 max_dist])
 title(sprintf('Distance at %d%% lateral diffraction efficiency vs NAeff', eff_lim*100))
 
-%% eff NA vs resolution
 
-NA_eff = 0.2:0.01:1.05;
-
-resolution_lateral = (0.61*wavelength)./(NA_eff);
-resolution_axial = (2*wavelength)./(NA_eff.^2);
-
-figure; hold on;
-plot(resolution_lateral/1e-6, NA_eff, 'Linewidth', 2);
-plot(resolution_axial/1e-6, NA_eff, 'Linewidth', 2);
-xlabel('Resolution (um)')
-ylim([NA_eff(1) NA_eff(end)])
-ylabel('NAeff')
-legend({'Lateral (x-y)', 'Axial (z)'})
-title(sprintf('Rayleigh resolution vs NAeff at %.0fnm', wavelength/1e-9))
 
 %% zernike orthogonality
 
