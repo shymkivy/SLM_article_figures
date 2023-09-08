@@ -67,13 +67,13 @@ nu = (sin(pi./N)./(pi./N)).^2;
 % ylabel('diffraction efficiency');
 % xlabel('Number of grating levels per period');
 
-figure;
-semilogx(N, nu, 'k', 'linewidth', 2); 
+f1 = figure; hold on
+p1 = plot(N, nu, 'k', 'linewidth', 2); 
 axis tight;
 title('Blazed grating diffraction efficiency')
 ylabel('diffraction efficiency');
 xlabel('Number of grating levels per period');
-
+f1.Children.XAxis.Scale = 'log';
 
 %%
 
@@ -85,7 +85,7 @@ M_image = 33/1400; % magnification of points image pattern from right after SLM
 
 SLM_pix_pitch = (5:0.2:12)*1e-6;
 
-min_pix_num = [2, 4, 8, 16];
+min_pix_num = [2, 3, 4, 8, 16];
 SLM_def_dist_all = zeros(numel(SLM_pix_pitch), numel(min_pix_num));
 
 num_pix = numel(min_pix_num);
@@ -111,7 +111,7 @@ end
 xlabel('pixel pitch (um)')
 ylabel('deflection dist (um)');
 title('Blazed period vs deflection distance')
-legend({[num2str(min_pix_num') repmat(' pix period', [4, 1])]})
+legend({[num2str(min_pix_num') repmat(' pix period', [numel(min_pix_num), 1])]})
 
 %%
 
@@ -386,37 +386,32 @@ title(sprintf('Distance at %d%% defocus efficiency vs NAeff', eff_lim*100))
 
 
 
-%% zernike orthogonality
-% 
-% d_rho = 0.000001;
-% x_loc = 0:d_rho:1;
-% rho = abs(x_loc);
-% 
-% y1 = rho.^2;
-% 
-% y2 = rho.^4;
-% 
-% zer02 = sqrt(3) * (2*rho.^2 - 1); % 
-% 
-% zer04 = sqrt(5) * (6*rho.^4 - 6*rho.^2 + 1); % 
-% 
-% zer06 = sqrt(15) * (20*rho.^6- 30*rho.^4+ 12*rho.^2- 1);
-% 
-% figure; hold on;
-% plot(x_loc, zer02)
-% plot(x_loc, zer04)
-% plot(x_loc, zer06)
-% 
-% 2*pi*sum(zer02.*rho*d_rho)
-% 
-% 
-% figure;
-% plot(rho, zer04 - zer02)
-% 
-% 
-% min(zer02)
-% 
-% max(zer02)
+%% zernike orthogonality test
+
+d_rho = 1/1000;
+x_loc = 0:d_rho:1;
+rho = abs(x_loc);
+
+y1 = rho.^2;
+
+y2 = rho.^4;
+
+zer02 = sqrt(3) * (2*rho.^2 - 1); % 
+
+zer04 = sqrt(5) * (6*rho.^4 - 6*rho.^2 + 1); % 
+
+zer06 = sqrt(15) * (20*rho.^6- 30*rho.^4+ 12*rho.^2- 1);
+
+figure; hold on;
+plot(x_loc, zer02)
+plot(x_loc, zer04)
+plot(x_loc, zer06)
+
+integral1 = 2*pi*sum(zer02.*rho*d_rho)
+
+
+figure;
+plot(rho, zer04 - zer02)
 
 
 %% defoucs
